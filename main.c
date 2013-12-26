@@ -679,29 +679,26 @@ void sendString(char str[])
 	WGM13:2 Waveform generation mode
 	CS12:0 Clock select
 
-		---------------------------------------------------------------------
-		|	CS12	CS11	CS10											|
-		|-------------------------------------------------------------------|
-		|	  0		  0		  0		No clock source (timer stopped)			|
-		|	  0		  0		  1		clk/1 (no prescaling)					|
-		|	  0		  1		  0		clk/8									|
-		|	  0		  1		  1		clk/64									|
-		|	  1		  0		  0		clk/256									|
-		|	  1		  0		  1		clk/1024								|
-		|	  1		  1		  0		External clock on T1, falling edge		|
-		|	  1		  1		  1		External clock on T1, rising edge		|
-		---------------------------------------------------------------------
+		-----------------------------------------------------------------
+		|	CS12  |	CS11  |	CS10  |	Note								|			|
+		|----------------------------------------------------------------
+		|	  0	  |	  0	  |	  0	  |	No clock source (timer stopped)		|
+		|	  0	  |	  0	  |	  1	  |	clk/1 (no prescaling)				|
+		|	  0	  |	  1	  |	  0	  |	clk/8								|
+		|	  0	  |	  1	  |	  1	  |	clk/64								|
+		|	  1	  |	  0	  |	  0	  |	clk/256								|
+		|	  1	  |	  0	  |	  1	  |	clk/1024							|
+		|	  1	  |	  1	  |	  0	  |	External clock on T1, falling edge	|
+		|	  1	  |	  1	  |	  1	  |	External clock on T1, rising edge	|
+		-----------------------------------------------------------------
 
-	For the Niden 22H motor with 2150 RPM no-load max speed, the fastest pulse
-	rate from the tachometer-1 wire is 6x2150=12,900 per minute or 215 Hz, or
-	a period of 4.651 ms. A 21.5 kHz clock would give a 1% resolution in timing.
-	The cpu clock is running at 14.745600 MHz so a /1024 prescaler will give
-	a 14.400 kHz signal. Not quite 1% but maybe good enough. This is 4.55111
-	seconds between overflows. A /256 prescaler gives a 57.6 kHz signal or a
-	17.361 us period. This overflows in 1.138 seconds. We'll use this one.
+	For the Niden 22H motor with 5300 RPM no-load max speed, the fastest
+	pulse rate from the tachometer-1 wire is 6x5300=31,800 per minute or
+	530 Hz, or a period of 1.887 ms.  A /256 prescaler gives a 57.6 kHz
+	signal or a 17.361 us period. About 1% accuracy. This overflows in
+	1.138 seconds.
 
 	TCCR1B = 0b00000100
-	
 	TCCR1A and TCCR1C can both be set to 0x00 for normal operation.
 
 ===========================================================================
