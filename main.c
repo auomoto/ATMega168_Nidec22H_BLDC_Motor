@@ -71,20 +71,19 @@
 uint16_t getNum(void);
 void init_ATMega168(void);
 void moveA(uint8_t, int16_t);
-//void moveRel(uint8_t, uint8_t, uint8_t, int16_t);
+void moveB(uint8_t, int16_t);
 void prtCounter(void);
-void rampA(uint8_t, uint8_t, uint8_t);
-void rampB(uint8_t, uint8_t, uint8_t);
 void rampDownA(void);
 void rampDownB(void);
 void rampUpA(uint8_t, uint8_t);
-void rampUpDown(uint8_t, uint8_t, uint8_t, uint8_t);
+void rampUpB(uint8_t, uint8_t);
 void sendPrompt(void);
 void sendByte(uint8_t);
 void sendCRLF(void);
 void sendString(char *);
 
 // Global variables
+volatile uint8_t pcint0 = 0xff;			// Save the PINB values for pin change interrupts
 volatile int16_t counterA, counterB;	// Local counters
 volatile uint16_t oldTimeA, oldTimeB;	// For computing motor RPM
 volatile uint16_t newTimeA, newTimeB;	// For computing motor RPM
@@ -107,8 +106,14 @@ int main(void)
 			{ presentCount = counterA; }
 			if (abs(presentCount - targetA) <= 3) {
 				rampDownA();
-			}			
-			
+			}
+		}
+		if (BisMoving) {
+			ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+			{ presentCount = counterB; }
+			if (abs(presentCount - targetB) <= 3) {
+				rampDownB();
+			}
 		}
 		if (COMMANDSENT) {
 
@@ -126,18 +131,23 @@ int main(void)
 						i = MINSPEED;
 					}
 					if (i == 255) {
-						newSpeed = 255;
+						newSpeed = 254;
 					} else {
 						newSpeed = i + 1;;
 					}
 					speedA(newSpeed);
+
 					i = OCR0B;
+					if (i < MINSPEED) {
+						i = MINSPEED;
+					}
 					if (i == 255) {
-						newSpeed = 255;
+						newSpeed = 254;
 					} else {
-						newSpeed = i+1;
+						newSpeed = i + 1;
 					}
 					speedB(newSpeed);
+
 					sendCRLF();
 					sendString("faster");
 					break;
@@ -149,12 +159,14 @@ int main(void)
 						newSpeed = MINSPEED;
 					}
 					OCR0A = newSpeed;
+
 					i = OCR0B;
 					newSpeed = i-1;
 					if (newSpeed < MINSPEED) {
 						newSpeed = MINSPEED;
 					}
 					OCR0B = newSpeed;
+
 					sendCRLF();
 					sendString("slower");
 					break;
@@ -167,15 +179,23 @@ int main(void)
 					break;
 
 				case ('f'):					// forward (clockwise)
+
 					forward(DIRA);
 					incrementA = 1;
+					sendCRLF();
+					sendString("forward=CW");
+
+					forward(DIRB);
+					incrementB = 1;
 					sendCRLF();
 					sendString("forward=CW");
 					break;
 
 				case ('g'):
 					targetA = 32767;
-					enable(ENABLEPINA);
+					enable(ENABLEPINA);					
+					targetB = 32767;
+					enable(ENABLEPINB);
 					sendCRLF();
 					sendString("go");
 					break;
@@ -194,11 +214,11 @@ int main(void)
 						motorChoice = MOTORB;
 					}
 					amount = getNum();
-					moveA(FORWARD, amount);
-					break;
-
-				case ('M'):
-//					moveRel(MOTORA, FORWARD, MINSPEED, 4096);
+					if (motorChoice == MOTORA) {
+						moveA(FORWARD, amount);
+					} else if (motorChoice == MOTORB) {
+						moveB(FORWARD, amount);
+					}
 					break;
 
 				case ('p'):					// Print motion status
@@ -208,6 +228,8 @@ int main(void)
 				case ('r'):					// reverse (counter-clockwise)
 					reverse(DIRA);
 					incrementA = -1;
+					reverse(DIRB);
+					incrementB = -1;
 					sendCRLF();
 					sendString("reverse=CCW");
 					break;
@@ -218,7 +240,10 @@ int main(void)
 					break;
 
 				case ('s'):
+					speedA(MINSPEED);
+					speedB(MINSPEED);
 					disable(ENABLEPINA);
+					disable(ENABLEPINB);
 					sendCRLF();
 					sendString("stop");
 					break;
@@ -241,7 +266,6 @@ int main(void)
 	}
 
 }
-
 
 uint16_t getNum()
 {
@@ -269,7 +293,6 @@ uint16_t getNum()
 
 }
 
-
 void moveA(uint8_t direction, int16_t amount)
 {
 
@@ -290,6 +313,27 @@ void moveA(uint8_t direction, int16_t amount)
 
 	rampUpA(direction, speed);
 	
+}
+
+void moveB(uint8_t direction, int16_t amount)
+{
+
+	uint8_t speed;
+
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{ counterB = 0; }
+	targetB = amount;
+
+	if (((amount/16) + MINSPEED) > 255) {
+		speed = 254;
+	} else {
+		speed = MINSPEED + (uint8_t)(amount/16);
+		if (speed >= 255) {
+			speed = 254;
+		}
+	}
+
+	rampUpB(direction, speed);
 }
 
 void prtCounter()
@@ -332,7 +376,6 @@ void prtCounter()
 	sendString(itoa(targetB, strBuf, 10));
 	sendString(" speedB: ");
 	sendString(itoa(OCR0B, strBuf, 10));
-	sendString("  ");
 	if (newTime > oldTime) {
 		rpm = 9600 / (newTime - oldTime);
 		rpm *= 60;
@@ -705,7 +748,6 @@ void sendString(char str[])
 
 */
 
-
 void init_ATMega168()
 {
 
@@ -791,13 +833,30 @@ void init_ATMega168()
 ISR(PCINT0_vect)
 {
 
-	if (PINB & _BV(PINB0)) {	// Rising edge (LOW to HIGH) pin change
-		counterA += incrementA;
-		oldTimeA = newTimeA;
-		newTimeA = TCNT1;
-		if ((counterA % 24) == 0) {
-			PORTB ^= _BV(LEDPIN);
+	uint8_t changedBits;
+
+	changedBits = PINB ^ pcint0;
+	pcint0 = PINB;
+
+	if (changedBits & _BV(PB0)) {		// MotorA
+		if (PINB & _BV(PINB0)) {		// Rising edge (LOW to HIGH) pin change
+			counterA += incrementA;
+			oldTimeA = newTimeA;
+			newTimeA = TCNT1;
+			if ((counterA % 24) == 0) {
+				PORTB ^= _BV(LEDPIN);
+			}
 		}
 	}
-
+	
+	if (changedBits & _BV(PB1)) {		// MotorB
+		if (PINB & _BV(PINB1)) {		// Rising edge (LOW to HIGH) pin change
+			counterB += incrementB;
+			oldTimeB = newTimeB;
+			newTimeB = TCNT1;
+			if ((counterB % 24) == 0) {
+				PORTB ^= _BV(LEDPIN);
+			}
+		}
+	}
 }
