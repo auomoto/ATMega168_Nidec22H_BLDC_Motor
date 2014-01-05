@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
+<grid distance="0.05" unitdist="inch" unit="inch" style="lines" multiple="1" display="yes" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="no" active="no"/>
 <layer number="16" name="Bottom" color="1" fill="1" visible="no" active="no"/>
@@ -7765,6 +7765,10 @@ Standard 8.5x11 US Letter frame</description>
 <pinref part="C6" gate="G$1" pin="1"/>
 <junction x="160.02" y="64.77"/>
 </segment>
+<segment>
+<pinref part="ISP1" gate="G$1" pin="VCC"/>
+<wire x1="101.6" y1="52.07" x2="104.14" y2="52.07" width="0.1524" layer="91"/>
+</segment>
 </net>
 <net name="N$3" class="0">
 <segment>
@@ -7790,7 +7794,7 @@ Standard 8.5x11 US Letter frame</description>
 <junction x="48.26" y="113.03"/>
 </segment>
 </net>
-<net name="N$5" class="0">
+<net name="SCK" class="0">
 <segment>
 <pinref part="IC2" gate="G$1" pin="(PCI5/SCK)PB5"/>
 <wire x1="114.3" y1="77.47" x2="119.38" y2="77.47" width="0.1524" layer="91"/>
@@ -7801,7 +7805,7 @@ Standard 8.5x11 US Letter frame</description>
 <wire x1="66.04" y1="49.53" x2="73.66" y2="49.53" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$6" class="0">
+<net name="MISO" class="0">
 <segment>
 <pinref part="IC2" gate="G$1" pin="(PCI4/MISO)PB4"/>
 <wire x1="114.3" y1="80.01" x2="124.46" y2="80.01" width="0.1524" layer="91"/>
@@ -7812,7 +7816,7 @@ Standard 8.5x11 US Letter frame</description>
 <wire x1="71.12" y1="52.07" x2="73.66" y2="52.07" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$7" class="0">
+<net name="MOSI" class="0">
 <segment>
 <pinref part="IC2" gate="G$1" pin="(PCI3/MOSI/OC2A)PB3"/>
 <wire x1="114.3" y1="82.55" x2="129.54" y2="82.55" width="0.1524" layer="91"/>
@@ -7821,20 +7825,14 @@ Standard 8.5x11 US Letter frame</description>
 <wire x1="129.54" y1="49.53" x2="101.6" y2="49.53" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$9" class="0">
-<segment>
-<pinref part="ISP1" gate="G$1" pin="VCC"/>
-<wire x1="101.6" y1="52.07" x2="104.14" y2="52.07" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="SS&amp;REQ" class="0">
+<net name="TACH-2" class="0">
 <segment>
 <pinref part="IC2" gate="G$1" pin="(PCI1/OC1A/OC1S)PB1"/>
 <wire x1="114.3" y1="87.63" x2="172.72" y2="87.63" width="0.1524" layer="91"/>
 <pinref part="JP4" gate="A" pin="4"/>
 </segment>
 </net>
-<net name="N$10" class="0">
+<net name="TXD" class="0">
 <segment>
 <pinref part="IC2" gate="G$1" pin="(PCI16/RXD)PD0"/>
 <wire x1="114.3" y1="113.03" x2="142.24" y2="113.03" width="0.1524" layer="91"/>
@@ -7842,7 +7840,7 @@ Standard 8.5x11 US Letter frame</description>
 <pinref part="JP1" gate="A" pin="4"/>
 </segment>
 </net>
-<net name="N$11" class="0">
+<net name="RXD" class="0">
 <segment>
 <pinref part="IC2" gate="G$1" pin="(PCI17/TXD)PD1"/>
 <wire x1="114.3" y1="110.49" x2="139.7" y2="110.49" width="0.1524" layer="91"/>
@@ -7850,7 +7848,7 @@ Standard 8.5x11 US Letter frame</description>
 <pinref part="JP1" gate="A" pin="5"/>
 </segment>
 </net>
-<net name="N$12" class="0">
+<net name="24V" class="0">
 <segment>
 <pinref part="12V" gate="G$1" pin="TIP"/>
 <wire x1="187.96" y1="158.75" x2="187.96" y2="153.67" width="0.1524" layer="91"/>
@@ -7866,7 +7864,7 @@ Standard 8.5x11 US Letter frame</description>
 <wire x1="165.1" y1="95.25" x2="172.72" y2="95.25" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$14" class="0">
+<net name="DIR-1" class="0">
 <segment>
 <pinref part="IC2" gate="G$1" pin="(PCI8/ADC0)PC0"/>
 <wire x1="114.3" y1="138.43" x2="139.7" y2="138.43" width="0.1524" layer="91"/>
@@ -7875,7 +7873,7 @@ Standard 8.5x11 US Letter frame</description>
 <wire x1="139.7" y1="140.97" x2="172.72" y2="140.97" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$15" class="0">
+<net name="TACH-1" class="0">
 <segment>
 <pinref part="JP3" gate="A" pin="4"/>
 <wire x1="172.72" y1="138.43" x2="144.78" y2="138.43" width="0.1524" layer="91"/>
@@ -7884,7 +7882,7 @@ Standard 8.5x11 US Letter frame</description>
 <wire x1="144.78" y1="90.17" x2="114.3" y2="90.17" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$17" class="0">
+<net name="PWM-1" class="0">
 <segment>
 <wire x1="157.48" y1="97.79" x2="157.48" y2="135.89" width="0.1524" layer="91"/>
 <pinref part="JP3" gate="A" pin="5"/>
@@ -7893,14 +7891,14 @@ Standard 8.5x11 US Letter frame</description>
 <wire x1="114.3" y1="97.79" x2="157.48" y2="97.79" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$18" class="0">
+<net name="EN-1" class="0">
 <segment>
 <pinref part="IC2" gate="G$1" pin="(PCI10/ADC2)PC2"/>
 <wire x1="114.3" y1="133.35" x2="172.72" y2="133.35" width="0.1524" layer="91"/>
 <pinref part="JP3" gate="A" pin="6"/>
 </segment>
 </net>
-<net name="N$19" class="0">
+<net name="DIR-2" class="0">
 <segment>
 <pinref part="IC2" gate="G$1" pin="(PCI9/ADC1)PC1"/>
 <wire x1="114.3" y1="135.89" x2="152.4" y2="135.89" width="0.1524" layer="91"/>
@@ -7909,7 +7907,7 @@ Standard 8.5x11 US Letter frame</description>
 <wire x1="152.4" y1="90.17" x2="172.72" y2="90.17" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$21" class="0">
+<net name="PWM-2" class="0">
 <segment>
 <pinref part="JP4" gate="A" pin="5"/>
 <wire x1="172.72" y1="85.09" x2="149.86" y2="85.09" width="0.1524" layer="91"/>
@@ -7918,36 +7916,13 @@ Standard 8.5x11 US Letter frame</description>
 <pinref part="IC2" gate="G$1" pin="(PCI21/T1/OC0B)PD5"/>
 </segment>
 </net>
-<net name="N$22" class="0">
+<net name="EN-2" class="0">
 <segment>
 <pinref part="IC2" gate="G$1" pin="(PCI11/ADC3)PC3"/>
 <wire x1="114.3" y1="130.81" x2="147.32" y2="130.81" width="0.1524" layer="91"/>
 <wire x1="147.32" y1="130.81" x2="147.32" y2="82.55" width="0.1524" layer="91"/>
 <pinref part="JP4" gate="A" pin="6"/>
 <wire x1="147.32" y1="82.55" x2="172.72" y2="82.55" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$8" class="0">
-<segment>
-<pinref part="U$6" gate="G$1" pin="S"/>
-<pinref part="U$6" gate="G$1" pin="S1"/>
-<wire x1="50.8" y1="153.67" x2="50.8" y2="156.21" width="0.1524" layer="91"/>
-<wire x1="50.8" y1="153.67" x2="53.34" y2="153.67" width="0.1524" layer="91"/>
-<junction x="50.8" y="153.67"/>
-<pinref part="ISP1" gate="G$1" pin="RST"/>
-<wire x1="53.34" y1="138.43" x2="25.4" y2="138.43" width="0.1524" layer="91"/>
-<wire x1="73.66" y1="46.99" x2="25.4" y2="46.99" width="0.1524" layer="91"/>
-<wire x1="25.4" y1="46.99" x2="25.4" y2="138.43" width="0.1524" layer="91"/>
-<pinref part="R1" gate="G$1" pin="2"/>
-<wire x1="25.4" y1="138.43" x2="25.4" y2="146.05" width="0.1524" layer="91"/>
-<junction x="25.4" y="138.43"/>
-<wire x1="53.34" y1="153.67" x2="53.34" y2="138.43" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$16" class="0">
-<segment>
-<pinref part="IC2" gate="G$1" pin="PC6(/RESET/PCI14)"/>
-<wire x1="58.42" y1="138.43" x2="50.8" y2="138.43" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$1" class="0">
@@ -7961,6 +7936,26 @@ Standard 8.5x11 US Letter frame</description>
 <segment>
 <pinref part="R2" gate="G$1" pin="2"/>
 <pinref part="LED1" gate="G$1" pin="A"/>
+</segment>
+</net>
+<net name="RST" class="0">
+<segment>
+<pinref part="U$6" gate="G$1" pin="S"/>
+<pinref part="U$6" gate="G$1" pin="S1"/>
+<wire x1="50.8" y1="153.67" x2="50.8" y2="156.21" width="0.1524" layer="91"/>
+<wire x1="50.8" y1="153.67" x2="53.34" y2="153.67" width="0.1524" layer="91"/>
+<junction x="50.8" y="153.67"/>
+<pinref part="ISP1" gate="G$1" pin="RST"/>
+<wire x1="73.66" y1="46.99" x2="25.4" y2="46.99" width="0.1524" layer="91"/>
+<wire x1="25.4" y1="46.99" x2="25.4" y2="138.43" width="0.1524" layer="91"/>
+<pinref part="R1" gate="G$1" pin="2"/>
+<pinref part="IC2" gate="G$1" pin="PC6(/RESET/PCI14)"/>
+<wire x1="25.4" y1="138.43" x2="25.4" y2="146.05" width="0.1524" layer="91"/>
+<wire x1="58.42" y1="138.43" x2="53.34" y2="138.43" width="0.1524" layer="91"/>
+<junction x="25.4" y="138.43"/>
+<wire x1="53.34" y1="138.43" x2="25.4" y2="138.43" width="0.1524" layer="91"/>
+<wire x1="53.34" y1="153.67" x2="53.34" y2="138.43" width="0.1524" layer="91"/>
+<junction x="53.34" y="138.43"/>
 </segment>
 </net>
 </nets>
