@@ -60,7 +60,9 @@
 #define AisMoving	(PINC & _BV(ENABLEPINA))
 #define BisMoving	(PINC & _BV(ENABLEPINB))
 
-#define BAUDRATE 19200
+#define BAUDRATE 9600
+
+
 #define MYUBRR ((F_CPU / 16 / BAUDRATE) -1)
 
 #define COMMANDSENT (UCSR0A & _BV(RXC0))	// Is there something in the RX buffer?
@@ -68,8 +70,9 @@
 
 
 // Function Prototypes
-uint16_t getNum(void);
+uint16_t recvNum(void);
 void init_ATMega168(void);
+uint8_t move(void);
 void moveA(uint8_t, int16_t);
 void moveB(uint8_t, int16_t);
 void prtCounter(void);
@@ -77,6 +80,7 @@ void rampDownA(void);
 void rampDownB(void);
 void rampUpA(uint8_t, uint8_t);
 void rampUpB(uint8_t, uint8_t);
+char recvChar(void);
 void sendPrompt(void);
 void sendByte(uint8_t);
 void sendCRLF(void);
@@ -93,8 +97,8 @@ int8_t incrementA, incrementB;			// Either +1 or -1 (Forward or reverse)
 int main(void)
 {
 
-	uint8_t i, cmd, newSpeed, motorChoice;
-	int16_t presentCount, amount;
+	uint8_t i, cmd, newSpeed;
+	int16_t presentCount;
 	char strBuf[20];
 
 	init_ATMega168();
@@ -201,24 +205,7 @@ int main(void)
 					break;
 
 				case ('m'):
-					sendString("ove motor ");
-					while (!COMMANDSENT) {
-						asm("nop");
-					}
-					motorChoice = UDR0;
-					sendByte(motorChoice);
-					sendString(" ");
-					if (motorChoice == 'a') {
-						motorChoice = MOTORA;
-					} else if (motorChoice == 'b') {
-						motorChoice = MOTORB;
-					}
-					amount = getNum();
-					if (motorChoice == MOTORA) {
-						moveA(FORWARD, amount);
-					} else if (motorChoice == MOTORB) {
-						moveB(FORWARD, amount);
-					}
+					move();
 					break;
 
 				case ('p'):					// Print motion status
@@ -250,7 +237,7 @@ int main(void)
 
 				case ('t'):
 					sendCRLF();
-					sendString(itoa(getNum(), strBuf, 10));
+					sendString(itoa(recvNum(), strBuf, 10));
 					break;
 
 				default:
@@ -267,30 +254,42 @@ int main(void)
 
 }
 
-uint16_t getNum()
+uint8_t move()
 {
 
 	char strBuf[20];
-	uint8_t i = 0;
+	uint8_t motor, direction;
+	uint16_t nsteps;
 
-	for (;;) {
-		while (!COMMANDSENT) {
-			asm("nop");
-		}
-		strBuf[i] = UDR0;
-		sendByte(strBuf[i]);
-		if (strBuf[i] == '\r') {
-			strBuf[i] = 0x00;
-			sendCRLF();
-			break;
-		}
-
-		i++;
-
+	sendString("ove\r\nMotor [a|b]:");
+	motor = recvChar();
+	sendByte(motor);
+	if (motor != 'a' && motor != 'b') {
+		sendString("?\r\n");
+		return(FALSE);
 	}
-
-	return(atoi(strBuf));
-
+	sendCRLF();
+	sendString("[f]orward or [r]everse:");
+	direction = recvChar();
+	sendByte(direction);
+	if (direction == 'f') {
+		direction = FORWARD;
+	} else if (direction == 'r') {
+		direction = REVERSE;
+	} else {
+		return(FALSE);
+	}
+	sendCRLF();
+	sendString("nsteps:");
+	nsteps = recvNum();
+	sendString(itoa(nsteps, strBuf, 10));
+	sendCRLF();
+	if (motor == 'a') {
+		moveA(direction, nsteps);
+	} else {
+		moveB(direction, nsteps);
+	}
+	return(TRUE);
 }
 
 void moveA(uint8_t direction, int16_t amount)
@@ -298,9 +297,13 @@ void moveA(uint8_t direction, int16_t amount)
 
 	uint8_t speed;
 
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-	{ counterA = 0; }
-	targetA = amount;
+	if (direction == REVERSE) {
+		amount = -amount;
+	}
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+		counterA = 0;
+		targetA = amount;
+	}
 
 	if (((amount/16) + MINSPEED) > 255) {
 		speed = 254;
@@ -320,10 +323,13 @@ void moveB(uint8_t direction, int16_t amount)
 
 	uint8_t speed;
 
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-	{ counterB = 0; }
-	targetB = amount;
-
+	if (direction == REVERSE) {
+		amount = -amount;
+	}
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+		counterB = 0;
+		targetB = amount;
+	}
 	if (((amount/16) + MINSPEED) > 255) {
 		speed = 254;
 	} else {
@@ -391,11 +397,11 @@ void rampDownA()
 
 	uint8_t i, currentSpeed;
 
-	currentSpeed = OCF0A;
+	currentSpeed = OCR0A;
 
 	for (i = currentSpeed; i >= MINSPEED; i--) {
 		speedA(i);
-		_delay_ms(1);
+		_delay_ms(2);
 	}
 	disable(ENABLEPINA);
 }
@@ -405,11 +411,11 @@ void rampDownB()
 
 	uint8_t i, currentSpeed;
 
-	currentSpeed = OCF0B;
+	currentSpeed = OCR0B;
 
 	for (i = currentSpeed; i >= MINSPEED; i--) {
 		speedB(i);
-		_delay_ms(1);
+		_delay_ms(2);
 	}
 	disable(ENABLEPINB);
 }
@@ -468,6 +474,16 @@ void rampUpB(uint8_t direction, uint8_t speed)
 
 }
 
+char recvChar(void)
+{
+
+	while (!COMMANDSENT) {
+		asm("nop");
+	}
+	return(UDR0);
+
+}
+
 void sendByte(uint8_t x)
 {
 
@@ -475,6 +491,32 @@ void sendByte(uint8_t x)
 		asm("nop");
 	}
 	UDR0 = x;
+
+}
+
+uint16_t recvNum()
+{
+
+	char strBuf[20];
+	uint8_t i = 0;
+
+	for (;;) {
+		while (!COMMANDSENT) {
+			asm("nop");
+		}
+		strBuf[i] = UDR0;
+		sendByte(strBuf[i]);
+		if (strBuf[i] == '\r') {
+			strBuf[i] = 0x00;
+			sendCRLF();
+			break;
+		}
+
+		i++;
+
+	}
+
+	return(atoi(strBuf));
 
 }
 
